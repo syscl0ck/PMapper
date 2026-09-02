@@ -2,6 +2,28 @@
 
 All notable changes to the project shall be documented in this file.
 
+## 2.0.0
+
+### Added
+
+* Modern packaging via `pyproject.toml` (PEP 621)
+* CI testing on Python 3.12 and 3.13 across Linux, macOS, and Windows
+
+### Changed
+
+* **Minimum Python version raised to 3.12** (drops support for Python 3.5 through 3.11)
+* Updated dependency minimums: `botocore>=1.34`, `packaging>=23.0`, `pydot>=2.0`
+* Dockerfile now uses `python:3.12-slim-bookworm`
+* GitHub Actions workflow updated to current action versions
+
+### Fixed
+
+* Import `Mapping` and `MutableMapping` from `collections.abc` for Python 3.10+ compatibility
+
+### Removed
+
+* Legacy `setup.py` packaging (replaced by `pyproject.toml`)
+
 ## 1.1.0
 
 ### Added

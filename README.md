@@ -16,8 +16,8 @@ Additional information can be found in [the project wiki](https://github.com/ncc
 
 ## Requirements
 
-Principal Mapper is built using the `botocore` library and Python 3.5+. Principal Mapper 
-also requires `pydot` (available on `pip`), and `graphviz` (available on Windows, macOS, and Linux from 
+Principal Mapper is built using the `botocore` library and **Python 3.12 or later**. Principal Mapper
+also requires `pydot` (available on `pip`), and `graphviz` (available on Windows, macOS, and Linux from
 https://graphviz.org/ ).
 
 ## Installation from Pip

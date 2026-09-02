@@ -1,9 +1,11 @@
-FROM python:3.8-slim-buster
+FROM python:3.12-slim-bookworm
 
 COPY . /app
-RUN apt-get update ; apt-get install -y graphviz
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends graphviz \
+    && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /storage
-RUN pip install /app
-ENV PMAPPER_STORAGE /storage
+RUN pip install --no-cache-dir /app
+ENV PMAPPER_STORAGE=/storage
 
-CMD sh
+CMD ["sh"]

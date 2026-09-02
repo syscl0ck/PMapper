@@ -1,6 +1,11 @@
 # Ignore Python artifacts
 *.swp
 *.pyc
+__pycache__/
+*.egg-info/
+build/
+dist/
+*.egg
 
 # Ignore image artifacts
 *.png
