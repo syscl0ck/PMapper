@@ -2,6 +2,12 @@
 
 All notable changes to the project shall be documented in this file.
 
+## 2.0.1
+
+### Fixed
+
+* Regional API scans now continue after SSL/connection failures (e.g. unreachable regions like `me-south-1`) instead of aborting `graph create`
+
 ## 2.0.0
 
 ### Added

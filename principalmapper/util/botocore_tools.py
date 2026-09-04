@@ -16,12 +16,28 @@
 #      along with Principal Mapper.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple, Type
 
 import botocore.session
+from botocore.exceptions import ClientError, ConnectionError
 
 
 logger = logging.getLogger(__name__)
+
+# ClientError covers IAM/API authorization and service errors.
+# ConnectionError covers SSL, DNS, timeout, and endpoint failures that
+# often show up for disabled/unreachable regions during multi-region scans.
+REGION_SCAN_ERRORS: Tuple[Type[BaseException], ...] = (ClientError, ConnectionError)
+
+
+def log_region_scan_failure(logger_obj: logging.Logger, region: str, resource_label: str, ex: BaseException) -> None:
+    """Log a non-fatal failure while scanning a single region, then continue."""
+    logger_obj.warning(
+        'Unable to search region {} for {}. The region may be disabled, unreachable, '
+        'or the current principal may not be authorized. Continuing.'.format(region, resource_label)
+    )
+    logger_obj.debug('Exception details: {}'.format(ex))
+
 
 
 def get_session(profile_arg: Optional[str], stsargs: Optional[dict] = None) -> botocore.session.Session:

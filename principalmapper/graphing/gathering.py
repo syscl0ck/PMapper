@@ -27,7 +27,7 @@ from principalmapper.common import Node, Group, Policy, Graph, OrganizationTree,
 from principalmapper.graphing import edge_identification
 from principalmapper.querying import query_interface
 from principalmapper.util import arns
-from principalmapper.util.botocore_tools import get_regions_to_search
+from principalmapper.util.botocore_tools import REGION_SCAN_ERRORS, get_regions_to_search, log_region_scan_failure
 from typing import List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -316,6 +316,9 @@ def get_s3_bucket_policies(session: botocore.session.Session, client_args_map: O
             else:
                 logger.info('Unable to retrieve bucket policy for {}. You should add this manually. Continuing.'.format(bucket))
             logger.debug('Exception was: {}'.format(ex))
+        except botocore.exceptions.ConnectionError as ex:
+            logger.info('Unable to retrieve bucket policy for {}. You should add this manually. Continuing.'.format(bucket))
+            logger.debug('Exception was: {}'.format(ex))
 
     return result
 
@@ -351,9 +354,8 @@ def get_kms_key_policies(session: botocore.session.Session, region_allow_list: O
                     json.loads(policy_str)
                 ))
                 logger.info('Caching policy for {}'.format(cmk))
-        except botocore.exceptions.ClientError as ex:
-            logger.info('Unable to search KMS in region {} for key policies. The region may be disabled, or the current principal may not be authorized to access the service. Continuing.'.format(kms_region))
-            logger.debug('Exception was: {}'.format(ex))
+        except REGION_SCAN_ERRORS as ex:
+            log_region_scan_failure(logger, kms_region, 'KMS key policies', ex)
             continue
 
     return result
@@ -390,9 +392,8 @@ def get_sns_topic_policies(session: botocore.session.Session, region_allow_list:
                     json.loads(policy_str)
                 ))
                 logger.info('Caching policy for {}'.format(topic))
-        except botocore.exceptions.ClientError as ex:
-            logger.info('Unable to search SNS in region {} for topic policies. The region may be disabled, or the current principal may not be authorized to access the service. Continuing.'.format(sns_region))
-            logger.debug('Exception was: {}'.format(ex))
+        except REGION_SCAN_ERRORS as ex:
+            log_region_scan_failure(logger, sns_region, 'SNS topic policies', ex)
             continue
 
     return result
@@ -445,9 +446,8 @@ def get_sqs_queue_policies(session: botocore.session.Session, account_id: str,
                         }
                     ))
                     logger.info('Queue {} does not have a queue policy, adding a "stub" policy instead.'.format(queue_name))
-        except botocore.exceptions.ClientError as ex:
-            logger.info('Unable to search SQS in region {} for queues. The region may be disabled, or the current principal may not be authorized to access the service. Continuing.'.format(sqs_region))
-            logger.debug('Exception was: {}'.format(ex))
+        except REGION_SCAN_ERRORS as ex:
+            log_region_scan_failure(logger, sqs_region, 'SQS queues', ex)
 
     return result
 
@@ -502,11 +502,8 @@ def get_secrets_manager_policies(session: botocore.session.Session, region_allow
                     ))
                     logger.info('Secret {} does not have a resource policy, inserting a "stub" policy instead'.format(secret_arn))
 
-        except botocore.exceptions.ClientError as ex:
-            logger.info('Unable to search Secrets Manager in region {} for secrets. The region may be disabled, or '
-                        'the current principal may not be authorized to access the service. '
-                        'Continuing.'.format(sm_region))
-            logger.debug('Exception was: {}'.format(ex))
+        except REGION_SCAN_ERRORS as ex:
+            log_region_scan_failure(logger, sm_region, 'Secrets Manager secrets', ex)
 
     return result
 

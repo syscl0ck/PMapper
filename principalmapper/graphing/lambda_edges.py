@@ -20,13 +20,13 @@ import logging
 import os
 from typing import List, Optional
 
-from botocore.exceptions import ClientError
-
 from principalmapper.common import Edge, Node
 from principalmapper.graphing.edge_checker import EdgeChecker
 from principalmapper.querying.local_policy_simulation import resource_policy_authorization, ResourcePolicyEvalResult
 from principalmapper.querying import query_interface
 from principalmapper.util import arns, botocore_tools
+from principalmapper.util.botocore_tools import REGION_SCAN_ERRORS, log_region_scan_failure
+
 
 
 logger = logging.getLogger(__name__)
@@ -61,10 +61,9 @@ class LambdaEdgeChecker(EdgeChecker):
                 for page in paginator.paginate(PaginationConfig={'PageSize': 25}):
                     for func in page['Functions']:
                         function_list.append(func)
-            except ClientError as ex:
-                logger.warning('Unable to search region {} for stacks. The region may be disabled, or the error may '
-                               'be caused by an authorization issue. Continuing.'.format(lambda_client.meta.region_name))
-                logger.debug('Exception details: {}'.format(ex))
+            except REGION_SCAN_ERRORS as ex:
+                log_region_scan_failure(logger, lambda_client.meta.region_name, 'Lambda functions', ex)
+
 
         logger.info('Generating Edges based on Lambda data.')
         logger.debug('Identified {} Lambda functions for processing'.format(len(function_list)))

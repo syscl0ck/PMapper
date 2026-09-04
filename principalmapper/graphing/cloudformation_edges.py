@@ -20,13 +20,13 @@ import logging
 import os
 from typing import List, Optional
 
-from botocore.exceptions import ClientError
-
 from principalmapper.common import Edge, Node
 from principalmapper.graphing.edge_checker import EdgeChecker
 from principalmapper.querying import query_interface
 from principalmapper.querying.local_policy_simulation import resource_policy_authorization, ResourcePolicyEvalResult
 from principalmapper.util import arns, botocore_tools
+from principalmapper.util.botocore_tools import REGION_SCAN_ERRORS, log_region_scan_failure
+
 
 
 logger = logging.getLogger(__name__)
@@ -65,10 +65,8 @@ class CloudFormationEdgeChecker(EdgeChecker):
                         if stack['StackStatus'] not in ['CREATE_FAILED', 'DELETE_COMPLETE', 'DELETE_FAILED',
                                                         'DELETE_IN_PROGRESS']:  # ignore unusable stacks
                             stack_list.append(stack)
-            except ClientError as ex:
-                logger.warning('Unable to search region {} for stacks. The region may be disabled, or the error may '
-                               'be caused by an authorization issue. Continuing.'.format(cf_client.meta.region_name))
-                logger.debug('Exception details: {}'.format(ex))
+            except REGION_SCAN_ERRORS as ex:
+                log_region_scan_failure(logger, cf_client.meta.region_name, 'stacks', ex)
 
         logger.info('Generating Edges based on data from CloudFormation.')
         result = generate_edges_locally(nodes, stack_list, scps)
